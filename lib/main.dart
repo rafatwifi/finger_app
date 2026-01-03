@@ -16,7 +16,19 @@ class App extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: AppConstants.appName,
-      home: const Scaffold(body: Center(child: Text(AppConstants.appName))),
+      home: const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Text(
+            'SYSTEM BOOT',
+            style: TextStyle(
+              color: Colors.green,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
