@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'core/constants/app_constants.dart';
+import 'core/services/firebase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await FirebaseService.init();
   runApp(const App());
 }
 
