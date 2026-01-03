@@ -6,6 +6,7 @@ import '../../core/services/app_user_state.dart';
 import '../home/employee_home.dart';
 import '../home/admin_home.dart';
 import '../../core/constants/roles.dart';
+import '../home/supervisor_home.dart';
 
 class BootScreen extends StatelessWidget {
   const BootScreen({super.key});
@@ -58,15 +59,20 @@ class BootScreen extends StatelessWidget {
 
             // تخزين المستخدم في الذاكرة (مرة واحدة)
             AppUserState.set(userSnap.data!);
-
             final appUser = AppUserState.user!;
 
-            if (appUser.role == UserRole.admin ||
-                appUser.role == UserRole.manager) {
-              return const AdminHome();
-            }
+            // التوجيه حسب الدور
+            switch (appUser.role) {
+              case UserRole.admin:
+              case UserRole.manager:
+                return const AdminHome();
 
-            return const EmployeeHome();
+              case UserRole.supervisor:
+                return const SupervisorHome();
+
+              case UserRole.employee:
+                return const EmployeeHome();
+            }
           },
         );
       },

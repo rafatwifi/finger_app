@@ -1,1 +1,1 @@
-enum UserRole { employee, groupLeader, departmentHead, admin, manager }
+enum UserRole { employee, supervisor, admin, manager }
