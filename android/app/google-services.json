@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "412401205704",
+    "project_id": "finger-app-c1653",
+    "storage_bucket": "finger-app-c1653.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:412401205704:android:d6b6ea54dad530216a00fd",
+        "android_client_info": {
+          "package_name": "com.example.finger_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAM7HxE3OStFOyitZtj4CrkCp0JqqMAaxw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
