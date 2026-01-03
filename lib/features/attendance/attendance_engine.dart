@@ -36,7 +36,6 @@ class AttendanceEngine {
     required double latitude,
     required double longitude,
     required bool isValid,
-    String status = 'pending',
   }) {
     return AttendanceRecordModel(
       id: id,
@@ -46,7 +45,7 @@ class AttendanceEngine {
       latitude: latitude,
       longitude: longitude,
       isValid: isValid,
-      status: status,
+      status: 'pending', // مهم جداً
     );
   }
 }
