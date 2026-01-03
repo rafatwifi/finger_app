@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/constants/app_constants.dart';
 import 'core/services/firebase_service.dart';
+import 'features/boot/boot_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,19 +17,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: AppConstants.appName,
-      home: const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
-          child: Text(
-            'SYSTEM BOOT',
-            style: TextStyle(
-              color: Colors.green,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
+      home: const BootScreen(),
     );
   }
 }
