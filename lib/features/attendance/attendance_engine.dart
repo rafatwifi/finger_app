@@ -1,5 +1,6 @@
 import '../../data/models/fingerprint_rule_model.dart';
 import '../../data/models/attendance_record_model.dart';
+import '../../core/utils/geo_utils.dart';
 
 class AttendanceEngine {
   bool validateFingerprint({
@@ -11,6 +12,19 @@ class AttendanceEngine {
     required double centerLat,
     required double centerLng,
   }) {
+    final distance = GeoUtils.distanceInMeters(
+      latitude,
+      longitude,
+      centerLat,
+      centerLng,
+    );
+
+    if (distance > allowedRadius) return false;
+
+    if (timestamp.isBefore(rule.startTime) || timestamp.isAfter(rule.endTime)) {
+      return false;
+    }
+
     return true;
   }
 
