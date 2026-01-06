@@ -1,33 +1,52 @@
 import '../../data/models/fingerprint_rule_model.dart';
 import '../../data/models/attendance_record_model.dart';
-import '../../core/utils/geo_utils.dart';
+import '../../core/utils/polygon_utils.dart';
 
 class AttendanceEngine {
-  bool validateFingerprint({
+  // تحقق تلقائي: وقت + داخل حدود المضلع
+  bool validate({
     required FingerprintRuleModel rule,
     required DateTime timestamp,
     required double latitude,
     required double longitude,
-    required double allowedRadius,
-    required double centerLat,
-    required double centerLng,
+    required List<List<double>> polygon, // حدود الدائرة (Polygon)
   }) {
-    final distance = GeoUtils.distanceInMeters(
-      latitude,
-      longitude,
-      centerLat,
-      centerLng,
+    // وقت البداية
+    final start = DateTime(
+      timestamp.year,
+      timestamp.month,
+      timestamp.day,
+      rule.startTime.hour,
+      rule.startTime.minute,
     );
 
-    if (distance > allowedRadius) return false;
+    // وقت النهاية
+    final end = DateTime(
+      timestamp.year,
+      timestamp.month,
+      timestamp.day,
+      rule.endTime.hour,
+      rule.endTime.minute,
+    );
 
-    if (timestamp.isBefore(rule.startTime) || timestamp.isAfter(rule.endTime)) {
+    // فحص الوقت
+    if (timestamp.isBefore(start) || timestamp.isAfter(end)) {
       return false;
     }
+
+    // فحص الموقع داخل المضلع
+    final inside = PolygonUtils.isPointInsidePolygon(
+      lat: latitude,
+      lng: longitude,
+      polygon: polygon,
+    );
+
+    if (!inside) return false;
 
     return true;
   }
 
+  // إنشاء سجل الحضور
   AttendanceRecordModel buildRecord({
     required String id,
     required String userId,
@@ -45,7 +64,7 @@ class AttendanceEngine {
       latitude: latitude,
       longitude: longitude,
       isValid: isValid,
-      status: 'pending', // مهم جداً
+      status: isValid ? 'approved' : 'rejected',
     );
   }
 }

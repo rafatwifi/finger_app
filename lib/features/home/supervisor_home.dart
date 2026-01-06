@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/utils/permission_guard.dart';
-import '../../core/constants/permissions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../supervisor/attendance_queue.dart';
 
 class SupervisorHome extends StatelessWidget {
   const SupervisorHome({super.key});
@@ -9,32 +9,28 @@ class SupervisorHome extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('SUPERVISOR HOME'),
+        backgroundColor: Colors.black,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+            },
+          ),
+        ],
+      ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'SUPERVISOR HOME',
-              style: TextStyle(
-                color: Colors.orange,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const SupervisorAttendanceQueue(),
               ),
-            ),
-            const SizedBox(height: 20),
-
-            if (PermissionGuard.can(Permission.approveAttendance))
-              ElevatedButton(
-                onPressed: () {},
-                child: const Text('Approve Attendance'),
-              ),
-
-            if (PermissionGuard.can(Permission.manageUsers))
-              ElevatedButton(
-                onPressed: () {},
-                child: const Text('Manage Users'),
-              ),
-          ],
+            );
+          },
+          child: const Text('Approve Attendance'),
         ),
       ),
     );

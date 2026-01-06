@@ -7,7 +7,7 @@ class AttendanceRecordModel {
   final double longitude;
   final bool isValid;
 
-  // pending | approved | rejected
+  // حالة السجل: pending | approved | rejected
   final String status;
 
   AttendanceRecordModel({
@@ -21,11 +21,12 @@ class AttendanceRecordModel {
     required this.status,
   });
 
+  // تحويل الكائن إلى Map للحفظ في Firestore
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
       'fingerprintRuleId': fingerprintRuleId,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': timestamp,
       'latitude': latitude,
       'longitude': longitude,
       'isValid': isValid,
@@ -33,22 +34,17 @@ class AttendanceRecordModel {
     };
   }
 
-  factory AttendanceRecordModel.fromMap(String id, Map<String, dynamic> data) {
+  // إنشاء كائن من بيانات Firestore
+  factory AttendanceRecordModel.fromMap(String id, Map<String, dynamic> map) {
     return AttendanceRecordModel(
       id: id,
-      userId: (data['userId'] ?? '').toString(),
-      fingerprintRuleId: (data['fingerprintRuleId'] ?? '').toString(),
-      timestamp:
-          DateTime.tryParse((data['timestamp'] ?? '').toString()) ??
-          DateTime.fromMillisecondsSinceEpoch(0),
-      latitude: (data['latitude'] is num)
-          ? (data['latitude'] as num).toDouble()
-          : 0.0,
-      longitude: (data['longitude'] is num)
-          ? (data['longitude'] as num).toDouble()
-          : 0.0,
-      isValid: (data['isValid'] == true),
-      status: (data['status'] ?? 'pending').toString(),
+      userId: map['userId'],
+      fingerprintRuleId: map['fingerprintRuleId'],
+      timestamp: (map['timestamp'] as dynamic).toDate(),
+      latitude: map['latitude'],
+      longitude: map['longitude'],
+      isValid: map['isValid'],
+      status: map['status'],
     );
   }
 }

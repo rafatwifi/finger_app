@@ -1,88 +1,70 @@
 import 'package:flutter/material.dart';
-import '../../core/utils/permission_guard.dart';
-import '../../core/constants/permissions.dart';
-import '../../data/repositories/attendance_repository.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SupervisorAttendanceQueue extends StatelessWidget {
   const SupervisorAttendanceQueue({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // منع الوصول إذا ما عنده صلاحية اعتماد
-    if (!PermissionGuard.can(Permission.approveAttendance)) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
-          child: Text('FORBIDDEN', style: TextStyle(color: Colors.red)),
-        ),
-      );
-    }
-
-    // مستودع الحضور
-    final repo = AttendanceRepository();
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Pending Attendance'),
         backgroundColor: Colors.black,
       ),
-
-      // جلب البصمات المعلقة مباشرة من Firestore
-      body: StreamBuilder(
-        stream: repo.pending(),
+      body: StreamBuilder<QuerySnapshot>(
+        // بث حي من فايربيس – أي تغيير ينعكس فوراً
+        stream: FirebaseFirestore.instance
+            .collection('attendance_records')
+            .where('status', isEqualTo: 'pending')
+            .snapshots(),
         builder: (context, snap) {
           // أثناء التحميل
-          if (!snap.hasData) {
+          if (snap.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(color: Colors.orange),
             );
           }
 
-          final records = snap.data!;
-
-          // لا توجد بصمات معلقة
-          if (records.isEmpty) {
+          // إذا ماكو بيانات
+          if (!snap.hasData || snap.data!.docs.isEmpty) {
             return const Center(
-              child: Text(
-                'NO PENDING ATTENDANCE',
-                style: TextStyle(color: Colors.grey),
-              ),
+              child: Text('NO PENDING', style: TextStyle(color: Colors.grey)),
             );
           }
 
-          // عرض قائمة البصمات
-          return ListView.builder(
-            itemCount: records.length,
-            itemBuilder: (context, index) {
-              final r = records[index];
+          final docs = snap.data!.docs;
 
-              return Card(
-                color: Colors.grey.shade900,
-                child: ListTile(
-                  title: Text(
-                    r.userId,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  subtitle: Text(
-                    r.timestamp.toString(),
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // زر اعتماد
-                      IconButton(
-                        icon: const Icon(Icons.check, color: Colors.green),
-                        onPressed: () => repo.approve(r.id),
-                      ),
-                      // زر رفض
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.red),
-                        onPressed: () => repo.reject(r.id),
-                      ),
-                    ],
-                  ),
+          return ListView.builder(
+            itemCount: docs.length,
+            itemBuilder: (context, i) {
+              final d = docs[i];
+
+              return ListTile(
+                title: Text(
+                  d['userId'],
+                  style: const TextStyle(color: Colors.white),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // زر قبول
+                    IconButton(
+                      icon: const Icon(Icons.check, color: Colors.green),
+                      onPressed: () async {
+                        // تحديث الحالة إلى approved
+                        await d.reference.update({'status': 'approved'});
+                      },
+                    ),
+                    // زر رفض
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red),
+                      onPressed: () async {
+                        // تحديث الحالة إلى rejected
+                        await d.reference.update({'status': 'rejected'});
+                      },
+                    ),
+                  ],
                 ),
               );
             },

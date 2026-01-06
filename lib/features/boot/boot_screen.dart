@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../auth/login_screen.dart';
 import '../../data/repositories/firestore_user_repository_impl.dart';
 import '../../core/services/app_user_state.dart';
-import '../home/employee_home.dart';
+import '../auth/login_screen.dart';
 import '../home/admin_home.dart';
-import '../../core/constants/roles.dart';
 import '../home/supervisor_home.dart';
+import '../home/employee_home.dart';
+import '../../core/constants/roles.dart';
 
 class BootScreen extends StatelessWidget {
   const BootScreen({super.key});
@@ -16,13 +16,6 @@ class BootScreen extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, authSnap) {
-        if (authSnap.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: Colors.black,
-            body: Center(child: CircularProgressIndicator(color: Colors.green)),
-          );
-        }
-
         if (!authSnap.hasData) {
           return const LoginScreen();
         }
@@ -35,42 +28,23 @@ class BootScreen extends StatelessWidget {
             email: firebaseUser.email ?? '',
           ),
           builder: (context, userSnap) {
-            if (userSnap.connectionState != ConnectionState.done) {
+            if (!userSnap.hasData) {
               return const Scaffold(
                 backgroundColor: Colors.black,
-                body: Center(
-                  child: CircularProgressIndicator(color: Colors.green),
-                ),
+                body: Center(child: CircularProgressIndicator()),
               );
             }
 
-            if (userSnap.hasError) {
-              return Scaffold(
-                backgroundColor: Colors.black,
-                body: Center(
-                  child: Text(
-                    userSnap.error.toString(),
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              );
-            }
-
-            // تخزين المستخدم في الذاكرة (مرة واحدة)
             AppUserState.set(userSnap.data!);
-            final appUser = AppUserState.user!;
+            final role = AppUserState.user!.role;
 
-            // التوجيه حسب الدور
-            switch (appUser.role) {
+            switch (role) {
               case UserRole.admin:
-              case UserRole.manager:
                 return const AdminHome();
-
               case UserRole.supervisor:
                 return const SupervisorHome();
-
               case UserRole.employee:
+              default:
                 return const EmployeeHome();
             }
           },
