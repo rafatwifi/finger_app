@@ -3,15 +3,15 @@ import '../../data/models/attendance_record_model.dart';
 import '../../core/utils/polygon_utils.dart';
 
 class AttendanceEngine {
-  // تحقق تلقائي: وقت + داخل حدود المضلع
+  // التحقق من البصمة: وقت + داخل حدود المضلع
   bool validate({
     required FingerprintRuleModel rule,
     required DateTime timestamp,
     required double latitude,
     required double longitude,
-    required List<List<double>> polygon, // حدود الدائرة (Polygon)
+    required List<List<double>> polygon, // حدود المنطقة (Polygon)
   }) {
-    // وقت البداية
+    // تحويل وقت البداية إلى DateTime
     final start = DateTime(
       timestamp.year,
       timestamp.month,
@@ -20,7 +20,7 @@ class AttendanceEngine {
       rule.startTime.minute,
     );
 
-    // وقت النهاية
+    // تحويل وقت النهاية إلى DateTime
     final end = DateTime(
       timestamp.year,
       timestamp.month,
@@ -41,12 +41,14 @@ class AttendanceEngine {
       polygon: polygon,
     );
 
-    if (!inside) return false;
+    if (!inside) {
+      return false;
+    }
 
     return true;
   }
 
-  // إنشاء سجل الحضور
+  // إنشاء سجل الحضور (دائماً يبدأ pending)
   AttendanceRecordModel buildRecord({
     required String id,
     required String userId,
@@ -64,7 +66,7 @@ class AttendanceEngine {
       latitude: latitude,
       longitude: longitude,
       isValid: isValid,
-      status: isValid ? 'approved' : 'rejected',
+      status: 'pending', // لا موافقة ولا رفض هنا
     );
   }
 }
