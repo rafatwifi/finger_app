@@ -26,19 +26,49 @@ class _EmployeeAttendanceScreenState extends State<EmployeeAttendanceScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Center(
-          child: SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton.icon(
-              icon: _loading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.fingerprint),
-              label: Text(_loading ? 'Submitting...' : 'Submit Attendance'),
-              onPressed: _loading ? null : _submitAttendance,
+          // زر البصمة المرعب
+          child: GestureDetector(
+            onTap: _loading ? null : _submitAttendance,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              width: double.infinity,
+              height: 140,
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.green, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withValues(alpha: 0.35),
+                    blurRadius: 20,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: _loading
+                    ? const CircularProgressIndicator(color: Colors.green)
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(
+                            Icons.fingerprint,
+                            size: 60,
+                            color: Colors.green,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            'اضغط للبصمة',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
             ),
           ),
         ),
@@ -52,7 +82,7 @@ class _EmployeeAttendanceScreenState extends State<EmployeeAttendanceScreen> {
     try {
       final engine = AttendanceEngine();
 
-      // قاعدة وقت تجريبية (وقت فقط)، الموقع/المضلع تشتغل لاحقاً من settings
+      // قاعدة وقت تجريبية
       final rule = FingerprintRuleModel(
         id: 'rule_test',
         name: 'Test Rule',
@@ -60,7 +90,7 @@ class _EmployeeAttendanceScreenState extends State<EmployeeAttendanceScreen> {
         endTime: const TimeOfDay(hour: 8, minute: 15),
       );
 
-      // ننشئ سجل بصمة بحالة pending دائماً (حتى لو تحققنا لاحقاً)
+      // إنشاء سجل حضور (Pending)
       final record = engine.buildRecord(
         id: '',
         userId: AppUserState.user!.id,
@@ -71,20 +101,20 @@ class _EmployeeAttendanceScreenState extends State<EmployeeAttendanceScreen> {
         isValid: true,
       );
 
-      // نكتب السجل بفايرستور
+      // حفظ في Firestore
       await FirebaseFirestore.instance
           .collection('attendance_records')
           .add(record.toMap());
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Submitted: pending approval')),
+        const SnackBar(content: Text('تم إرسال البصمة (بانتظار المعالجة)')),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('ERROR: $e')));
+      ).showSnackBar(SnackBar(content: Text('خطأ: $e')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

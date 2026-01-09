@@ -25,41 +25,67 @@ class SupervisorAttendanceQueue extends StatelessWidget {
           }
 
           final docs = snap.data!.docs;
+
           if (docs.isEmpty) {
             return const Center(
-              child: Text('NO PENDING', style: TextStyle(color: Colors.grey)),
+              child: Text(
+                'NO PENDING',
+                style: TextStyle(color: Colors.grey, fontSize: 18),
+              ),
             );
           }
 
           return ListView.builder(
+            padding: const EdgeInsets.all(16),
             itemCount: docs.length,
             itemBuilder: (context, i) {
               final d = docs[i];
-              return ListTile(
-                title: Text(
-                  d['userId'],
-                  style: const TextStyle(color: Colors.white),
+
+              return Card(
+                color: Colors.grey.shade900,
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                subtitle: Text(
-                  d['timestamp'].toDate().toString(),
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.check, color: Colors.green),
-                      onPressed: () async {
-                        await d.reference.update({'status': 'approved'});
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: () async {
-                        await d.reference.update({'status': 'rejected'});
-                      },
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        d['userId'],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        d['timestamp'].toDate().toString(),
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.red),
+                            onPressed: () {
+                              d.reference.update({'status': 'rejected'});
+                            },
+                          ),
+                          const SizedBox(width: 12),
+                          IconButton(
+                            icon: const Icon(Icons.check, color: Colors.green),
+                            onPressed: () {
+                              d.reference.update({'status': 'approved'});
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
