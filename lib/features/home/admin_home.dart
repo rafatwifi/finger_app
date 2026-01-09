@@ -1,55 +1,55 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../admin/polygon_editor.dart';
 
-class AdminHome extends StatelessWidget {
+class AdminHome extends StatefulWidget {
   const AdminHome({super.key});
+
+  @override
+  State<AdminHome> createState() => _AdminHomeState();
+}
+
+class _AdminHomeState extends State<AdminHome> {
+  int _index = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+
       appBar: AppBar(
-        title: const Text('ADMIN'),
+        title: const Text('Admin'),
         backgroundColor: Colors.black,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              // تسجيل خروج من Firebase
               await FirebaseAuth.instance.signOut();
             },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.map),
-                label: const Text('Draw Attendance Area'),
-                onPressed: () {
-                  // فتح شاشة رسم المضلع
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const PolygonEditorScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'ارسم المنطقة مرة وحدة وخزّنها، بعدها الموظف يتفحص داخل/خارج.',
-              style: TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+
+      body: IndexedStack(
+        index: _index,
+        children: const [
+          PolygonEditorScreen(),
+          Center(
+            child: Text('Users (قريباً)', style: TextStyle(color: Colors.grey)),
+          ),
+        ],
+      ),
+
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _index,
+        backgroundColor: Colors.black,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        onTap: (i) => setState(() => _index = i),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Area'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Users'),
+        ],
       ),
     );
   }

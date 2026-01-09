@@ -2,54 +2,60 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../employee/employee_attendance.dart';
 
-class EmployeeHome extends StatelessWidget {
+class EmployeeHome extends StatefulWidget {
   const EmployeeHome({super.key});
+
+  @override
+  State<EmployeeHome> createState() => _EmployeeHomeState();
+}
+
+class _EmployeeHomeState extends State<EmployeeHome> {
+  int _index = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+
       appBar: AppBar(
-        title: const Text('EMPLOYEE'),
+        title: const Text('Employee'),
         backgroundColor: Colors.black,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              // تسجيل خروج من Firebase حتى يطلب تسجيل دخول من جديد
               await FirebaseAuth.instance.signOut();
             },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // زر البصمة (إرسال حضور)
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.fingerprint),
-                label: const Text('Submit Attendance'),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const EmployeeAttendanceScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'اذا الزر ما يسوي شي: المشكلة تكون بالصلاحيات/الموقع/جلب المضلع',
+
+      body: IndexedStack(
+        index: _index,
+        children: const [
+          EmployeeAttendanceScreen(),
+          Center(
+            child: Text(
+              'History (قريباً)',
               style: TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _index,
+        backgroundColor: Colors.black,
+        selectedItemColor: Colors.green,
+        unselectedItemColor: Colors.grey,
+        onTap: (i) => setState(() => _index = i),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fingerprint),
+            label: 'Attendance',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+        ],
       ),
     );
   }
