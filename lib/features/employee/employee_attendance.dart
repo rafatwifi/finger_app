@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
+
 import '../../features/attendance/attendance_engine.dart';
 import '../../data/models/fingerprint_rule_model.dart';
 import '../../core/services/app_user_state.dart';
@@ -17,66 +19,56 @@ class EmployeeAttendanceScreen extends StatelessWidget {
       ),
       body: Center(
         child: ElevatedButton(
-          // زر إرسال البصمة (تجريبي)
+          child: const Text('Submit Attendance'),
           onPressed: () async {
-            final engine = AttendanceEngine();
-
-            // قاعدة بصمة تجريبية (الوقت)
-            final rule = FingerprintRuleModel(
-              id: 'rule_test',
-              name: 'Morning',
-              startTime: const TimeOfDay(hour: 7, minute: 30),
-              endTime: const TimeOfDay(hour: 8, minute: 15),
+            // 1️⃣ جلب الموقع الحقيقي
+            final pos = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high,
             );
 
-            // جلب مضلع المنطقة من Firestore
-            final areaSnap = await FirebaseFirestore.instance
+            // 2️⃣ جلب المضلع من Firestore
+            final snap = await FirebaseFirestore.instance
                 .collection('settings')
                 .doc('attendance_area')
                 .get();
 
-            if (!areaSnap.exists) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('NO AREA SET')));
-              }
-              return;
-            }
-
-            final List polygonRaw = areaSnap['polygon'];
-            final polygon = polygonRaw
+            final polygon = (snap['polygon'] as List)
                 .map<List<double>>(
                   (p) => [p['lat'] as double, p['lng'] as double],
                 )
                 .toList();
 
-            // إحداثيات تجريبية (لاحقًا GPS)
-            final now = DateTime.now();
-            const lat = 33.3152;
-            const lng = 44.3661;
+            // 3️⃣ قاعدة الوقت
+            final rule = FingerprintRuleModel(
+              id: 'rule_test',
+              name: 'Office Time',
+              startTime: const TimeOfDay(hour: 7, minute: 30),
+              endTime: const TimeOfDay(hour: 15, minute: 0),
+            );
 
-            // التحقق
+            final engine = AttendanceEngine();
+
+            // 4️⃣ تحقق وقت + موقع
             final isValid = engine.validate(
               rule: rule,
-              timestamp: now,
-              latitude: lat,
-              longitude: lng,
+              timestamp: DateTime.now(),
+              latitude: pos.latitude,
+              longitude: pos.longitude,
               polygon: polygon,
             );
 
-            // إنشاء سجل بحالة pending دائمًا
+            // 5️⃣ إنشاء سجل
             final record = engine.buildRecord(
               id: '',
               userId: AppUserState.user!.id,
               rule: rule,
-              timestamp: now,
-              latitude: lat,
-              longitude: lng,
+              timestamp: DateTime.now(),
+              latitude: pos.latitude,
+              longitude: pos.longitude,
               isValid: isValid,
             );
 
-            // حفظ السجل
+            // 6️⃣ حفظ
             await FirebaseFirestore.instance
                 .collection('attendance_records')
                 .add(record.toMap());
@@ -86,14 +78,13 @@ class EmployeeAttendanceScreen extends StatelessWidget {
                 SnackBar(
                   content: Text(
                     isValid
-                        ? 'SUBMITTED (PENDING)'
-                        : 'REJECTED (TIME / LOCATION)',
+                        ? 'Attendance Approved Automatically'
+                        : 'Attendance Rejected (Location/Time)',
                   ),
                 ),
               );
             }
           },
-          child: const Text('Submit Attendance'),
         ),
       ),
     );
