@@ -9,7 +9,7 @@ class SupervisorAttendanceQueue extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Pending Attendance'),
+        title: const Text('Supervisor'),
         backgroundColor: Colors.black,
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -19,70 +19,48 @@ class SupervisorAttendanceQueue extends StatelessWidget {
             .snapshots(),
         builder: (context, snap) {
           if (!snap.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.orange),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           final docs = snap.data!.docs;
-
           if (docs.isEmpty) {
             return const Center(
-              child: Text(
-                'NO PENDING',
-                style: TextStyle(color: Colors.grey, fontSize: 18),
-              ),
+              child: Text('NO PENDING', style: TextStyle(color: Colors.grey)),
             );
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
             itemCount: docs.length,
             itemBuilder: (context, i) {
               final d = docs[i];
-
               return Card(
                 color: Colors.grey.shade900,
-                margin: const EdgeInsets.only(bottom: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                margin: const EdgeInsets.all(8),
+                child: ListTile(
+                  title: Text(
+                    d['userId'],
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    d['timestamp'].toDate().toString(),
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        d['userId'],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.check, color: Colors.green),
+                        onPressed: () {
+                          // اعتماد البصمة
+                          d.reference.update({'status': 'approved'});
+                        },
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        d['timestamp'].toDate().toString(),
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.close, color: Colors.red),
-                            onPressed: () {
-                              d.reference.update({'status': 'rejected'});
-                            },
-                          ),
-                          const SizedBox(width: 12),
-                          IconButton(
-                            icon: const Icon(Icons.check, color: Colors.green),
-                            onPressed: () {
-                              d.reference.update({'status': 'approved'});
-                            },
-                          ),
-                        ],
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.red),
+                        onPressed: () {
+                          // رفض البصمة
+                          d.reference.update({'status': 'rejected'});
+                        },
                       ),
                     ],
                   ),

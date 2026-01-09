@@ -3,10 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/firestore_user_repository_impl.dart';
 import '../../core/services/app_user_state.dart';
 import '../auth/login_screen.dart';
-import '../home/admin_home.dart';
-import '../home/supervisor_home.dart';
-import '../home/employee_home.dart';
-import '../../core/constants/roles.dart';
+import '../shell/app_shell.dart';
 
 class BootScreen extends StatelessWidget {
   const BootScreen({super.key});
@@ -16,6 +13,15 @@ class BootScreen extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, authSnap) {
+        if (authSnap.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Colors.black,
+            body: Center(
+              child: CircularProgressIndicator(color: Colors.orange),
+            ),
+          );
+        }
+
         if (!authSnap.hasData) {
           return const LoginScreen();
         }
@@ -31,22 +37,15 @@ class BootScreen extends StatelessWidget {
             if (!userSnap.hasData) {
               return const Scaffold(
                 backgroundColor: Colors.black,
-                body: Center(child: CircularProgressIndicator()),
+                body: Center(
+                  child: CircularProgressIndicator(color: Colors.orange),
+                ),
               );
             }
 
             AppUserState.set(userSnap.data!);
-            final role = AppUserState.user!.role;
 
-            switch (role) {
-              case UserRole.admin:
-                return const AdminHome();
-              case UserRole.supervisor:
-                return const SupervisorHome();
-              case UserRole.employee:
-              default:
-                return const EmployeeHome();
-            }
+            return const AppShell(); // ← هذا الوحيد
           },
         );
       },

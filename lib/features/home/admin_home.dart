@@ -10,12 +10,13 @@ class AdminHome extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('ADMIN'),
+        title: const Text('Admin'),
         backgroundColor: Colors.black,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              // تسجيل خروج الأدمن
               await FirebaseAuth.instance.signOut();
             },
           ),
@@ -26,13 +27,19 @@ class AdminHome extends StatelessWidget {
         child: Column(
           children: [
             Card(
-              color: Colors.blueGrey.shade900,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
+              color: Colors.grey.shade900,
+              child: ListTile(
+                leading: const Icon(Icons.map, color: Colors.orange),
+                title: const Text(
+                  'Attendance Area',
+                  style: TextStyle(color: Colors.white),
+                ),
+                subtitle: const Text(
+                  'Draw allowed zone',
+                  style: TextStyle(color: Colors.grey),
+                ),
                 onTap: () {
+                  // فتح محرر المنطقة
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -40,25 +47,6 @@ class AdminHome extends StatelessWidget {
                     ),
                   );
                 },
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 140,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.map, size: 48, color: Colors.orange),
-                      SizedBox(height: 12),
-                      Text(
-                        'تحديد منطقة الحضور',
-                        style: TextStyle(
-                          color: Colors.orange,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
             ),
           ],
