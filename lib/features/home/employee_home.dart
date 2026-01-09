@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../employee/employee_attendance.dart';
 
 class EmployeeHome extends StatelessWidget {
   const EmployeeHome({super.key});
@@ -10,7 +9,7 @@ class EmployeeHome extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('EMPLOYEE HOME'),
+        title: const Text('EMPLOYEE'),
         backgroundColor: Colors.black,
         actions: [
           IconButton(
@@ -22,15 +21,16 @@ class EmployeeHome extends StatelessWidget {
         ],
       ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const EmployeeAttendanceScreen(),
-              ),
-            );
-          },
-          child: const Text('Submit Attendance'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.fingerprint, color: Colors.green, size: 80),
+            SizedBox(height: 20),
+            Text(
+              'EMPLOYEE HOME',
+              style: TextStyle(color: Colors.green, fontSize: 22),
+            ),
+          ],
         ),
       ),
     );
