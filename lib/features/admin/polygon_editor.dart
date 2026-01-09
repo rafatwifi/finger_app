@@ -13,17 +13,6 @@ class _PolygonEditorScreenState extends State<PolygonEditorScreen> {
   final List<LatLng> _points = [];
   GoogleMapController? _map;
 
-  Future<void> _savePolygon() async {
-    if (_points.length < 3) return;
-
-    await FirebaseFirestore.instance.collection('areas').doc('main').set({
-      'points': _points
-          .map((p) => {'lat': p.latitude, 'lng': p.longitude})
-          .toList(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,7 +31,7 @@ class _PolygonEditorScreenState extends State<PolygonEditorScreen> {
         ),
         onMapCreated: (c) => _map = c,
         onTap: (p) {
-          // إضافة نقطة للمضلع عند اللمس
+          // إضافة نقطة عند الضغط
           setState(() => _points.add(p));
         },
         polygons: {
@@ -52,7 +41,6 @@ class _PolygonEditorScreenState extends State<PolygonEditorScreen> {
               points: _points,
               strokeColor: Colors.orange,
               fillColor: Colors.orange.withValues(alpha: 0.3),
-
               strokeWidth: 2,
             ),
         },
@@ -68,8 +56,8 @@ class _PolygonEditorScreenState extends State<PolygonEditorScreen> {
     );
   }
 
+  // حفظ المضلع في Firestore
   Future<void> _savePolygon() async {
-    // حفظ الحدود في Firestore (مرة واحدة)
     final data = _points
         .map((p) => {'lat': p.latitude, 'lng': p.longitude})
         .toList();
