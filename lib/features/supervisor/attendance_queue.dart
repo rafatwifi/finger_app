@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SupervisorAttendanceQueue extends StatelessWidget {
   const SupervisorAttendanceQueue({super.key});
@@ -8,10 +9,23 @@ class SupervisorAttendanceQueue extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+
+      // شريط علوي مع زر تسجيل الخروج
       appBar: AppBar(
-        title: const Text('Supervisor'),
+        title: const Text('Pending Attendance'),
         backgroundColor: Colors.black,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              // تسجيل خروج المستخدم الحالي
+              await FirebaseAuth.instance.signOut();
+            },
+          ),
+        ],
       ),
+
+      // جلب البصمات المعلقة فقط
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('attendance_records')
@@ -19,10 +33,13 @@ class SupervisorAttendanceQueue extends StatelessWidget {
             .snapshots(),
         builder: (context, snap) {
           if (!snap.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.orange),
+            );
           }
 
           final docs = snap.data!.docs;
+
           if (docs.isEmpty) {
             return const Center(
               child: Text('NO PENDING', style: TextStyle(color: Colors.grey)),
@@ -33,9 +50,10 @@ class SupervisorAttendanceQueue extends StatelessWidget {
             itemCount: docs.length,
             itemBuilder: (context, i) {
               final d = docs[i];
+
               return Card(
-                color: Colors.grey.shade900,
-                margin: const EdgeInsets.all(8),
+                color: const Color(0xFF1E1E1E),
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: ListTile(
                   title: Text(
                     d['userId'],
@@ -48,18 +66,18 @@ class SupervisorAttendanceQueue extends StatelessWidget {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // زر موافقة
                       IconButton(
                         icon: const Icon(Icons.check, color: Colors.green),
-                        onPressed: () {
-                          // اعتماد البصمة
-                          d.reference.update({'status': 'approved'});
+                        onPressed: () async {
+                          await d.reference.update({'status': 'approved'});
                         },
                       ),
+                      // زر رفض
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.red),
-                        onPressed: () {
-                          // رفض البصمة
-                          d.reference.update({'status': 'rejected'});
+                        onPressed: () async {
+                          await d.reference.update({'status': 'rejected'});
                         },
                       ),
                     ],
