@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import '../admin/polygon_editor.dart';
 
 class AdminHome extends StatelessWidget {
@@ -10,26 +10,45 @@ class AdminHome extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('ADMIN HOME'),
+        title: const Text('ADMIN'),
         backgroundColor: Colors.black,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              // تسجيل خروج المستخدم الحالي
+              // تسجيل خروج من Firebase
               await FirebaseAuth.instance.signOut();
             },
           ),
         ],
       ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PolygonEditorScreen()),
-            );
-          },
-          child: const Text('Edit Attendance Area'),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.map),
+                label: const Text('Draw Attendance Area'),
+                onPressed: () {
+                  // فتح شاشة رسم المضلع
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const PolygonEditorScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'ارسم المنطقة مرة وحدة وخزّنها، بعدها الموظف يتفحص داخل/خارج.',
+              style: TextStyle(color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

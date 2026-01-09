@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../employee/employee_attendance.dart';
 
 class EmployeeHome extends StatelessWidget {
   const EmployeeHome({super.key});
@@ -15,20 +16,37 @@ class EmployeeHome extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              // تسجيل خروج من Firebase حتى يطلب تسجيل دخول من جديد
               await FirebaseAuth.instance.signOut();
             },
           ),
         ],
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.fingerprint, color: Colors.green, size: 80),
-            SizedBox(height: 20),
-            Text(
-              'EMPLOYEE HOME',
-              style: TextStyle(color: Colors.green, fontSize: 22),
+          children: [
+            // زر البصمة (إرسال حضور)
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.fingerprint),
+                label: const Text('Submit Attendance'),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const EmployeeAttendanceScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'اذا الزر ما يسوي شي: المشكلة تكون بالصلاحيات/الموقع/جلب المضلع',
+              style: TextStyle(color: Colors.grey),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
