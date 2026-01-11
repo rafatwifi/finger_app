@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AttendanceSubmitter {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// تحويل التاريخ إلى مفتاح يوم (YYYY-MM-DD)
+  // تحويل التاريخ لمفتاح يوم ثابت: YYYY-MM-DD
   String _dayKey(DateTime dt) {
     final y = dt.year.toString().padLeft(4, '0');
     final m = dt.month.toString().padLeft(2, '0');
@@ -11,8 +11,6 @@ class AttendanceSubmitter {
     return '$y-$m-$d';
   }
 
-  /// إرسال بصمة واحدة حسب (موظف + قاعدة + يوم)
-  /// يمنع التكرار داخل نفس الفترة
   Future<void> submit({
     required String userId,
     required String ruleId,
@@ -22,8 +20,8 @@ class AttendanceSubmitter {
     final now = DateTime.now();
     final day = _dayKey(now);
 
-    /// docId ثابت يمنع التكرار
-    final docId = '${userId}_$ruleId\_$day';
+    // docId ثابت يمنع إضافة أكثر من بصمة لنفس (الموظف + القاعدة + اليوم)
+    final docId = '${userId}_${ruleId}_$day';
 
     final ref = _db.collection('attendance_records').doc(docId);
 
@@ -34,12 +32,12 @@ class AttendanceSubmitter {
         final data = snap.data() as Map<String, dynamic>;
         final status = (data['status'] ?? 'pending').toString();
 
-        /// إذا بصم مسبقاً بنفس الفترة
+        // إذا موجود pending أو approved => نمنع التكرار
         if (status == 'pending' || status == 'approved') {
-          throw StateError('Already submitted for this time slot');
+          throw StateError('Already submitted for this slot today');
         }
 
-        /// إذا مرفوض، نحدث نفس السجل
+        // إذا كان rejected نسمح بإعادة الإرسال على نفس السجل
         tx.update(ref, {
           'timestamp': FieldValue.serverTimestamp(),
           'latitude': latitude,
@@ -50,7 +48,7 @@ class AttendanceSubmitter {
         return;
       }
 
-      /// أول بصمة لهذه الفترة
+      // أول إرسال لهذا السلوك/اليوم
       tx.set(ref, {
         'userId': userId,
         'ruleId': ruleId,
