@@ -1,21 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../core/services/app_user_state.dart';
+//import '../../core/services/app_user_state.dart';
 import '../../features/attendance/attendance_engine.dart';
 import '../../data/models/fingerprint_rule_model.dart';
+import '../../core/services/biometric_service.dart';
 
 class EmployeeAttendanceScreen extends StatelessWidget {
   const EmployeeAttendanceScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user = AppUserState.user!;
+    // جلب المستخدم الحالي من Firebase مباشرة لتفادي null
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+
+    // إذا ماكو مستخدم مسجل دخول، نطلع شاشة فاضية بدون كراش
+    if (firebaseUser == null) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Text(
+            'No user logged in',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.black,
 
-      // شريط علوي
       appBar: AppBar(
         title: const Text('Employee Attendance'),
         backgroundColor: Colors.black,
@@ -23,6 +37,7 @@ class EmployeeAttendanceScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              // تسجيل خروج المستخدم
               await FirebaseAuth.instance.signOut();
             },
           ),
@@ -31,7 +46,7 @@ class EmployeeAttendanceScreen extends StatelessWidget {
 
       body: Column(
         children: [
-          // بطاقة المستخدم
+          // بطاقة معلومات المستخدم
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
@@ -51,7 +66,7 @@ class EmployeeAttendanceScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      user.email,
+                      firebaseUser.email ?? 'Unknown',
                       style: const TextStyle(color: Colors.white),
                     ),
                     const SizedBox(height: 4),
@@ -65,13 +80,21 @@ class EmployeeAttendanceScreen extends StatelessWidget {
             ),
           ),
 
-          // زر البصمة الكبير
+          // زر البصمة الحيوية
           Expanded(
             child: Center(
               child: GestureDetector(
                 onTap: () async {
+                  // تنفيذ التحقق البيومتري الحقيقي
+                  final bool authResult = await BiometricService.authenticate();
+
+                  // إذا فشل التحقق نوقف التنفيذ
+                  if (!authResult) return;
+
+                  // إنشاء محرك الحضور
                   final engine = AttendanceEngine();
 
+                  // قاعدة وقت افتراضية
                   final rule = FingerprintRuleModel(
                     id: 'rule_test',
                     name: 'Default Rule',
@@ -79,9 +102,10 @@ class EmployeeAttendanceScreen extends StatelessWidget {
                     endTime: const TimeOfDay(hour: 17, minute: 0),
                   );
 
+                  // إنشاء سجل حضور
                   final record = engine.buildRecord(
                     id: '',
-                    userId: user.id,
+                    userId: firebaseUser.uid,
                     rule: rule,
                     timestamp: DateTime.now(),
                     latitude: 0,
@@ -89,6 +113,7 @@ class EmployeeAttendanceScreen extends StatelessWidget {
                     isValid: true,
                   );
 
+                  // حفظ السجل في Firestore
                   await FirebaseFirestore.instance
                       .collection('attendance_records')
                       .add(record.toMap());
@@ -111,7 +136,7 @@ class EmployeeAttendanceScreen extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.orange.withOpacity(0.5),
+                        color: Colors.orange.withValues(alpha: 0.5),
                         blurRadius: 20,
                       ),
                     ],
@@ -126,14 +151,14 @@ class EmployeeAttendanceScreen extends StatelessWidget {
             ),
           ),
 
-          // آخر حالة
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
+          // عرض آخر حالة حضور
+          FutureBuilder<QuerySnapshot>(
+            future: FirebaseFirestore.instance
                 .collection('attendance_records')
-                .where('userId', isEqualTo: user.id)
+                .where('userId', isEqualTo: firebaseUser.uid)
                 .orderBy('timestamp', descending: true)
                 .limit(1)
-                .snapshots(),
+                .get(),
             builder: (context, snap) {
               if (!snap.hasData || snap.data!.docs.isEmpty) {
                 return const Padding(
@@ -146,7 +171,7 @@ class EmployeeAttendanceScreen extends StatelessWidget {
               }
 
               final d = snap.data!.docs.first;
-              final status = d['status'];
+              final String status = d['status'] ?? 'pending';
 
               return Padding(
                 padding: const EdgeInsets.all(16),
