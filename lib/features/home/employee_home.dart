@@ -33,7 +33,7 @@ class _EmployeeHomeState extends State<EmployeeHome> {
       body: IndexedStack(
         index: _index,
         children: const [
-          EmployeeAttendanceScreen(),
+          EmployeeAttendance(),
           Center(
             child: Text(
               'History (قريباً)',

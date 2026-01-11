@@ -1,29 +1,32 @@
+// lib/features/employee/employee_attendance.dart
+// شاشة الموظف: بصمة الجهاز + إضافة Record إلى Firestore + عرض آخر حالة
+// ملاحظة: هذا الملف مكتفي ذاتياً ولا يعتمد على AppUserState أو ملفات موديلات
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-//import '../../core/services/app_user_state.dart';
-import '../../features/attendance/attendance_engine.dart';
-import '../../data/models/fingerprint_rule_model.dart';
-import '../../core/services/biometric_service.dart';
+import 'package:local_auth/local_auth.dart';
 
-class EmployeeAttendanceScreen extends StatelessWidget {
-  const EmployeeAttendanceScreen({super.key});
+class EmployeeAttendance extends StatefulWidget {
+  const EmployeeAttendance({super.key});
+
+  @override
+  State<EmployeeAttendance> createState() => _EmployeeAttendanceState();
+}
+
+class _EmployeeAttendanceState extends State<EmployeeAttendance> {
+  final LocalAuthentication _auth = LocalAuthentication();
+  bool _loading = false; // لمنع التكرار وإظهار دوران على الزر
 
   @override
   Widget build(BuildContext context) {
-    // جلب المستخدم الحالي من Firebase مباشرة لتفادي null
-    final firebaseUser = FirebaseAuth.instance.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
 
-    // إذا ماكو مستخدم مسجل دخول، نطلع شاشة فاضية بدون كراش
-    if (firebaseUser == null) {
+    // إذا ماكو مستخدم مسجل دخول: نعرض سبنر (المفروض ما يصير إذا BootScreen مضبوط)
+    if (user == null) {
       return const Scaffold(
         backgroundColor: Colors.black,
-        body: Center(
-          child: Text(
-            'No user logged in',
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
+        body: Center(child: CircularProgressIndicator(color: Colors.orange)),
       );
     }
 
@@ -31,13 +34,13 @@ class EmployeeAttendanceScreen extends StatelessWidget {
       backgroundColor: Colors.black,
 
       appBar: AppBar(
-        title: const Text('Employee Attendance'),
         backgroundColor: Colors.black,
+        title: const Text('Employee Attendance'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              // تسجيل خروج المستخدم
+              // تسجيل خروج
               await FirebaseAuth.instance.signOut();
             },
           ),
@@ -46,7 +49,7 @@ class EmployeeAttendanceScreen extends StatelessWidget {
 
       body: Column(
         children: [
-          // بطاقة معلومات المستخدم
+          // بطاقة المستخدم
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
@@ -57,109 +60,97 @@ class EmployeeAttendanceScreen extends StatelessWidget {
             child: Row(
               children: [
                 const CircleAvatar(
-                  radius: 30,
+                  radius: 28,
                   backgroundColor: Colors.orange,
-                  child: Icon(Icons.person, color: Colors.black, size: 30),
+                  child: Icon(Icons.person, color: Colors.black),
                 ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      firebaseUser.email ?? 'Unknown',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'EMPLOYEE',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.email ?? '',
+                        style: const TextStyle(color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'EMPLOYEE',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
 
-          // زر البصمة الحيوية
+          // زر البصمة
           Expanded(
             child: Center(
               child: GestureDetector(
-                onTap: () async {
-                  // تنفيذ التحقق البيومتري الحقيقي
-                  final bool authResult = await BiometricService.authenticate();
-
-                  // إذا فشل التحقق نوقف التنفيذ
-                  if (!authResult) return;
-
-                  // إنشاء محرك الحضور
-                  final engine = AttendanceEngine();
-
-                  // قاعدة وقت افتراضية
-                  final rule = FingerprintRuleModel(
-                    id: 'rule_test',
-                    name: 'Default Rule',
-                    startTime: const TimeOfDay(hour: 7, minute: 0),
-                    endTime: const TimeOfDay(hour: 17, minute: 0),
-                  );
-
-                  // إنشاء سجل حضور
-                  final record = engine.buildRecord(
-                    id: '',
-                    userId: firebaseUser.uid,
-                    rule: rule,
-                    timestamp: DateTime.now(),
-                    latitude: 0,
-                    longitude: 0,
-                    isValid: true,
-                  );
-
-                  // حفظ السجل في Firestore
-                  await FirebaseFirestore.instance
-                      .collection('attendance_records')
-                      .add(record.toMap());
-
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Attendance sent (pending)'),
-                      ),
-                    );
-                  }
-                },
-                child: Container(
-                  width: 160,
-                  height: 160,
+                onTap: _loading
+                    ? null
+                    : _submitAttendance, // هنا الاستدعاء الحقيقي
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: 170,
+                  height: 170,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Colors.orange, Colors.deepOrange],
+                    gradient: LinearGradient(
+                      colors: _loading
+                          ? [Colors.grey, Colors.grey]
+                          : [Colors.orange, Colors.deepOrange],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.orange.withValues(alpha: 0.5),
-                        blurRadius: 20,
+                        color: Colors.orange.withOpacity(0.5),
+                        blurRadius: 22,
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.fingerprint,
-                    size: 80,
-                    color: Colors.black,
+                  child: Center(
+                    child: _loading
+                        ? const SizedBox(
+                            width: 36,
+                            height: 36,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: Colors.black,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.fingerprint,
+                            size: 90,
+                            color: Colors.black,
+                          ),
                   ),
                 ),
               ),
             ),
           ),
 
-          // عرض آخر حالة حضور
-          FutureBuilder<QuerySnapshot>(
-            future: FirebaseFirestore.instance
+          // آخر حالة (Realtime حتى ما يصير “يطلع وبعدين يختفي”)
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
                 .collection('attendance_records')
-                .where('userId', isEqualTo: firebaseUser.uid)
+                .where('userId', isEqualTo: user.uid)
                 .orderBy('timestamp', descending: true)
                 .limit(1)
-                .get(),
+                .snapshots(),
             builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Loading last status...',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+              }
+
               if (!snap.hasData || snap.data!.docs.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.all(16),
@@ -171,20 +162,18 @@ class EmployeeAttendanceScreen extends StatelessWidget {
               }
 
               final d = snap.data!.docs.first;
-              final String status = d['status'] ?? 'pending';
+              final status =
+                  (d.data() as Map<String, dynamic>)['status'] ?? 'pending';
+
+              Color c = Colors.orange;
+              if (status == 'approved') c = Colors.green;
+              if (status == 'rejected') c = Colors.red;
 
               return Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   'Last status: $status',
-                  style: TextStyle(
-                    color: status == 'approved'
-                        ? Colors.green
-                        : status == 'rejected'
-                        ? Colors.red
-                        : Colors.orange,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: c, fontSize: 16),
                 ),
               );
             },
@@ -192,5 +181,83 @@ class EmployeeAttendanceScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _submitAttendance() async {
+    // هذه الدالة هي “استدعاء الملف/المنطق” من زر البصمة
+    // هنا نعمل: بصمة الجهاز -> ثم نضيف record واحد فقط إلى Firestore
+    setState(() => _loading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        _toast('NO SESSION');
+        return;
+      }
+
+      // 1) هل الجهاز يدعم بصمات؟
+      final canCheck = await _auth.canCheckBiometrics;
+      final isSupported = await _auth.isDeviceSupported();
+      if (!canCheck || !isSupported) {
+        _toast('Biometrics not available on this device');
+        return;
+      }
+
+      // 2) طلب بصمة النظام (هذه “بصمة الجهاز”)
+      final ok = await _auth.authenticate(
+        localizedReason: 'Confirm attendance with biometrics',
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+        ),
+      );
+
+      if (!ok) {
+        _toast('Biometric cancelled/failed');
+        return;
+      }
+
+      // 3) منع تكرار البصمة خلال 30 ثانية لنفس المستخدم (حل لمشكلة “مليار ريكورد”)
+      final now = DateTime.now();
+      final since = now.subtract(const Duration(seconds: 30));
+
+      final recent = await FirebaseFirestore.instance
+          .collection('attendance_records')
+          .where('userId', isEqualTo: user.uid)
+          .where('clientTimestamp', isGreaterThan: Timestamp.fromDate(since))
+          .limit(1)
+          .get();
+
+      if (recent.docs.isNotEmpty) {
+        _toast('Already submitted. Wait a bit.');
+        return;
+      }
+
+      // 4) إضافة record
+      await FirebaseFirestore.instance.collection('attendance_records').add({
+        'userId': user.uid,
+        'timestamp':
+            FieldValue.serverTimestamp(), // وقت من السيرفر للفرز الصحيح
+        'clientTimestamp': Timestamp.fromDate(
+          now,
+        ), // وقت من الجهاز لمنع التكرار
+        'status': 'pending',
+        'latitude': 0, // لاحقاً نربط Geolocator
+        'longitude': 0,
+        'isValid': true,
+      });
+
+      _toast('Attendance sent (pending)');
+    } catch (e) {
+      _toast('ERROR: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _toast(String msg) {
+    // إشعار سريع للمستخدم
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 }

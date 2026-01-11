@@ -31,7 +31,7 @@ class _AppShellState extends State<AppShell> {
 
     // الصفحات (دائماً عنصرين على الأقل)
     final pages = <Widget>[
-      if (role == UserRole.employee) const EmployeeAttendanceScreen(),
+      if (role == UserRole.employee) const EmployeeAttendance(),
       if (role == UserRole.supervisor) const SupervisorAttendanceQueue(),
       if (role == UserRole.admin) const AdminHome(),
 
