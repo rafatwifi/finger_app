@@ -1,5 +1,5 @@
 # finger_app
-
+Attendance App for goverment and bissniss 
 A new Flutter project.
 
 ## Getting Started
