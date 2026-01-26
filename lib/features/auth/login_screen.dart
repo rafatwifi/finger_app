@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+<<<<<<< HEAD
 /// شاشة تسجيل الدخول – تصميم جديد + منطق قديم شغال
+=======
+>>>>>>> f664b82b45fa707f038a8920f7e170291ca6ccf4
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -10,6 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+<<<<<<< HEAD
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -54,12 +58,28 @@ class _LoginScreenState extends State<LoginScreen> {
           _error = 'LOGIN FAIL';
         });
       }
+=======
+  final emailCtrl = TextEditingController();
+  final passCtrl = TextEditingController();
+  String status = '';
+
+  Future<void> login() async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailCtrl.text.trim(),
+        password: passCtrl.text.trim(),
+      );
+      setState(() => status = 'LOGIN OK');
+    } catch (e) {
+      setState(() => status = 'LOGIN FAIL');
+>>>>>>> f664b82b45fa707f038a8920f7e170291ca6ccf4
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       backgroundColor: const Color(0xFF0B0E13),
       body: Center(
         child: SingleChildScrollView(
@@ -187,6 +207,37 @@ class _LoginScreenState extends State<LoginScreen> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(color: Color(0xFFFFD54F)),
+=======
+      backgroundColor: Colors.black,
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: emailCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                hintText: 'Email',
+                hintStyle: TextStyle(color: Colors.grey),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: passCtrl,
+              obscureText: true,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                hintText: 'Password',
+                hintStyle: TextStyle(color: Colors.grey),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(onPressed: login, child: const Text('LOGIN')),
+            const SizedBox(height: 12),
+            Text(status, style: const TextStyle(color: Colors.green)),
+          ],
+>>>>>>> f664b82b45fa707f038a8920f7e170291ca6ccf4
         ),
       ),
     );

@@ -1,5 +1,9 @@
 # finger_app
+<<<<<<< HEAD
 
+=======
+Attendance App for goverment and bissniss 
+>>>>>>> f664b82b45fa707f038a8920f7e170291ca6ccf4
 A new Flutter project.
 
 ## Getting Started
