@@ -1,0 +1,9 @@
+{
+  "@@locale": "ar",
+
+  "loginTitle": "تسجيل الدخول",
+  "email": "البريد الإلكتروني",
+  "password": "كلمة المرور",
+  "loginButton": "دخول",
+  "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+}

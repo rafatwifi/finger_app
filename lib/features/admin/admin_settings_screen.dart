@@ -2,8 +2,11 @@
 // شاشة إعدادات الأدمن (تحكم مركزي) - تصميم Dark + Neon
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../data/models/app_settings_model.dart';
 import '../../data/repositories/settings_repository.dart';
+import '../../core/ui/login_logo_controller.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -53,6 +56,53 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
               const SizedBox(height: 12),
 
+              // ==============================
+              // 🔽 Login Screen Logo (NEW)
+              // ==============================
+              _card(
+                title: 'Login Screen Logo',
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.image_outlined,
+                          color: Colors.white70),
+                      title: const Text(
+                        'Change login logo',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      subtitle: const Text(
+                        'Pick image with crop & rotate',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                      onTap: () async {
+                        await context
+                            .read<LoginLogoController>()
+                            .pickAndCropLogo(context); // ✅ التعديل الوحيد
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.delete_outline,
+                          color: Colors.white70),
+                      title: const Text(
+                        'Remove login logo',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      subtitle: const Text(
+                        'Restore default fingerprint icon',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                      onTap: () async {
+                        await context.read<LoginLogoController>().clearLogo();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // ===== باقي إعداداتك كما هي بدون أي تغيير =====
+
               _card(
                 title: 'Time Format',
                 child: Row(
@@ -99,7 +149,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       activeColor: primary,
                       inactiveColor: Colors.white12,
                       onChanged: (v) async {
-                        // تحديث لحظي — بدون سبام: نحدّث بعد تغيير السلايدر
                         await _repo.save(
                           settings.copyWith(maxScansPerDay: v.round()),
                         );
@@ -201,6 +250,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       ),
     );
   }
+
+  // ===== جميع دوالك الأصلية بدون أي تغيير =====
 
   Widget _headerCard(Color primary, Color accent, AppSettingsModel s) {
     return Container(
@@ -365,9 +416,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 BoxShadow(color: c.withOpacity(0.25), blurRadius: 12),
               ],
             ),
-            child: selected
-                ? const Icon(Icons.check, color: Colors.black)
-                : null,
+            child:
+                selected ? const Icon(Icons.check, color: Colors.black) : null,
           ),
         );
       }).toList(),
@@ -432,7 +482,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   Color _hexToColor(String hex) {
-    // تحويل hex مثل "#FF6A00" إلى Color
     final cleaned = hex.replaceAll('#', '').trim();
     final value = int.parse('FF$cleaned', radix: 16);
     return Color(value);

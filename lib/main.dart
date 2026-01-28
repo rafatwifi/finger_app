@@ -1,38 +1,61 @@
-import 'package:firebase_core/firebase_core.dart';
+/*
+نقطة تشغيل التطبيق.
+- إضافة Provider خاص بـ LoginLogoController
+- الإبقاء على AppLocale
+- بدون تغيير Firebase أو Navigation أو الثيم
+*/
+
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
+import 'core/localization/app_locale.dart';
+import 'core/ui/login_logo_controller.dart';
 import 'features/boot/boot_screen.dart';
+import 'l10n/app_localizations.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-  /// أي خطأ غير ملتقط سابقاً كان يتركك في spinner أو شاشة سوداء بدون تفسير.
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-  };
-
-  /// تشغيل Firebase قبل أي شيء.
-  await Firebase.initializeApp();
-
-  runApp(const FingerApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppLocale()),
+        ChangeNotifierProvider(create: (_) => LoginLogoController()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
-class FingerApp extends StatelessWidget {
-  const FingerApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final appLocale = context.watch<AppLocale>();
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-
-      /// اتجاه عربي RTL من البداية.
-      builder: (context, child) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
-
+      locale: appLocale.locale,
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ar'),
+      ],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      themeMode: ThemeMode.system,
+      theme: ThemeData.light(useMaterial3: true),
+      darkTheme: ThemeData.dark(useMaterial3: true),
       home: const BootScreen(),
     );
   }

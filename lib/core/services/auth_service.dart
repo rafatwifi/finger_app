@@ -1,28 +1,46 @@
+/*
+هذا الملف مسؤول عن المصادقة (Authentication).
+تم تعديله لمعالجة أخطاء Firebase بشكل منظم
+وإرجاع كود خطأ مفهوم بدل رسالة تقنية.
+*/
+
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  User? get currentUser => _auth.currentUser;
-
-  Future<UserCredential> signInWithEmail({
+  Future<UserCredential> signInWithEmailAndPassword({
     required String email,
     required String password,
-  }) {
-    return _auth.signInWithEmailAndPassword(email: email, password: password);
-  }
+  }) async {
+    try {
+      return await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      // تحويل أخطاء Firebase إلى كود موحد
+      if (e.code == 'user-not-found' ||
+          e.code == 'wrong-password' ||
+          e.code == 'invalid-credential') {
+        throw AuthException('invalid_credentials');
+      }
 
-  Future<UserCredential> registerWithEmail({
-    required String email,
-    required String password,
-  }) {
-    return _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-  }
+      if (e.code == 'invalid-email') {
+        throw AuthException('invalid_email');
+      }
 
-  Future<void> signOut() {
-    return _auth.signOut();
+      // أي خطأ آخر
+      throw AuthException('unknown_error');
+    }
   }
+}
+
+/*
+Exception مخصص للتطبيق
+يُستخدم لاحقًا لربط الرسالة باللغة
+*/
+class AuthException implements Exception {
+  final String code;
+  AuthException(this.code);
 }

@@ -1,0 +1,9 @@
+{
+  "@@locale": "en",
+
+  "loginTitle": "Login",
+  "email": "Email",
+  "password": "Password",
+  "loginButton": "Sign In",
+  "invalidCredentials": "Invalid email or password"
+}
