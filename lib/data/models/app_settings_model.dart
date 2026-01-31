@@ -1,5 +1,7 @@
 // lib/data/models/app_settings_model.dart
 // موديل إعدادات النظام (مركزي) يُحفظ في Firestore
+// تم إضافة دعم رابط لوغو شاشة تسجيل الدخول (loginLogoUrl)
+// بدون كسر أي إعدادات أو مفاتيح حالية
 
 class AppSettingsModel {
   final String timeFormat; // "12" أو "24"
@@ -8,11 +10,14 @@ class AppSettingsModel {
   final bool requireLocation; // يحتاج تحقق موقع
   final bool requireBiometric; // يحتاج بصمة جهاز (مؤقت)
 
-  // UI Theme (أساس للتحكم بالهوية)
+  // UI Theme
   final String primaryColorHex; // مثل: "#FF6A00"
   final String accentColorHex; // مثل: "#00FFAA"
   final double logoSize; // حجم اللوغو في الواجهة
   final String slogan; // نص تحت/فوق اللوغو
+
+  // 🔽 جديد: رابط لوغو شاشة تسجيل الدخول (من Firebase Storage)
+  final String? loginLogoUrl;
 
   const AppSettingsModel({
     required this.timeFormat,
@@ -24,9 +29,9 @@ class AppSettingsModel {
     required this.accentColorHex,
     required this.logoSize,
     required this.slogan,
+    this.loginLogoUrl,
   });
 
-  // إعدادات افتراضية إذا ماكو وثيقة بعد
   factory AppSettingsModel.defaults() {
     return const AppSettingsModel(
       timeFormat: '24',
@@ -38,10 +43,10 @@ class AppSettingsModel {
       accentColorHex: '#00FFAA',
       logoSize: 120,
       slogan: 'ATTEND OR BE SEEN',
+      loginLogoUrl: null,
     );
   }
 
-  // تحويل من Firestore Map
   factory AppSettingsModel.fromMap(Map<String, dynamic>? data) {
     final d = data ?? {};
     final ui = (d['uiTheme'] as Map<String, dynamic>?) ?? {};
@@ -56,10 +61,10 @@ class AppSettingsModel {
       accentColorHex: (ui['accentColor'] ?? '#00FFAA').toString(),
       logoSize: _asDouble(ui['logoSize'], 120),
       slogan: (ui['slogan'] ?? 'ATTEND OR BE SEEN').toString(),
+      loginLogoUrl: ui['loginLogoUrl']?.toString(),
     );
   }
 
-  // تحويل إلى Firestore Map
   Map<String, dynamic> toMap() {
     return {
       'timeFormat': timeFormat,
@@ -72,11 +77,11 @@ class AppSettingsModel {
         'accentColor': accentColorHex,
         'logoSize': logoSize,
         'slogan': slogan,
+        'loginLogoUrl': loginLogoUrl,
       },
     };
   }
 
-  // نسخ سريع عند التعديل داخل الشاشة
   AppSettingsModel copyWith({
     String? timeFormat,
     int? maxScansPerDay,
@@ -87,6 +92,7 @@ class AppSettingsModel {
     String? accentColorHex,
     double? logoSize,
     String? slogan,
+    String? loginLogoUrl,
   }) {
     return AppSettingsModel(
       timeFormat: timeFormat ?? this.timeFormat,
@@ -98,6 +104,7 @@ class AppSettingsModel {
       accentColorHex: accentColorHex ?? this.accentColorHex,
       logoSize: logoSize ?? this.logoSize,
       slogan: slogan ?? this.slogan,
+      loginLogoUrl: loginLogoUrl ?? this.loginLogoUrl,
     );
   }
 
