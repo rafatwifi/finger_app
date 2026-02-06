@@ -5,5 +5,30 @@
   "email": "البريد الإلكتروني",
   "password": "كلمة المرور",
   "loginButton": "دخول",
-  "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+  "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+
+  "adminSettingsTitle": "إعدادات المدير",
+  "loginScreenLogo": "لوغو شاشة الدخول",
+  "manage": "إدارة",
+  "changeLoginLogo": "تغيير لوغو الدخول",
+  "removeLoginLogo": "حذف لوغو الدخول",
+
+  "timeFormat": "تنسيق الوقت",
+  "dailyScansLimit": "الحد اليومي للبصمات",
+  "maxScansPerDay": "أقصى عدد باليوم",
+  "validationRules": "قواعد التحقق",
+  "requireSupervisor": "يتطلب موافقة مشرف",
+  "requireLocation": "يتطلب الموقع",
+  "requireBiometric": "يتطلب بصمة الجهاز",
+
+  "theme": "الثيم",
+  "primaryColor": "اللون الأساسي",
+  "accentColor": "اللون الثانوي",
+  "logoSize": "حجم اللوغو",
+  "slogan": "الشعار",
+
+  "save": "حفظ",
+  "apply": "تطبيق",
+  "saved": "تم الحفظ",
+  "applied": "تم التطبيق"
 }

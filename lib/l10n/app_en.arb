@@ -5,5 +5,30 @@
   "email": "Email",
   "password": "Password",
   "loginButton": "Sign In",
-  "invalidCredentials": "Invalid email or password"
+  "invalidCredentials": "Invalid email or password",
+
+  "adminSettingsTitle": "Admin Settings",
+  "loginScreenLogo": "Login Screen Logo",
+  "manage": "Manage",
+  "changeLoginLogo": "Change login logo",
+  "removeLoginLogo": "Remove login logo",
+
+  "timeFormat": "Time Format",
+  "dailyScansLimit": "Daily Scans Limit",
+  "maxScansPerDay": "Max scans per day",
+  "validationRules": "Validation Rules",
+  "requireSupervisor": "Require Supervisor Approval",
+  "requireLocation": "Require Location",
+  "requireBiometric": "Require Biometric (Device)",
+
+  "theme": "Theme",
+  "primaryColor": "Primary Color",
+  "accentColor": "Accent Color",
+  "logoSize": "Logo size",
+  "slogan": "Slogan",
+
+  "save": "Save",
+  "apply": "Apply",
+  "saved": "Saved",
+  "applied": "Applied"
 }

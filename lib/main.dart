@@ -1,9 +1,8 @@
-/*
-نقطة تشغيل التطبيق.
-- إضافة Provider خاص بـ LoginLogoController
-- الإبقاء على AppLocale
-- بدون تغيير Firebase أو Navigation أو الثيم
-*/
+// lib/main.dart
+// نقطة تشغيل التطبيق
+// - لغة افتراضية = لغة الجهاز
+// - لغة من Firestore (appLanguageCode)
+// - منع loop وإعادة set أثناء build
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -13,6 +12,8 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'core/localization/app_locale.dart';
 import 'core/ui/login_logo_controller.dart';
+import 'data/repositories/settings_repository.dart';
+import 'data/models/app_settings_model.dart';
 import 'features/boot/boot_screen.dart';
 import 'l10n/app_localizations.dart';
 
@@ -40,23 +41,36 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final appLocale = context.watch<AppLocale>();
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      locale: appLocale.locale,
-      supportedLocales: const [
-        Locale('en'),
-        Locale('ar'),
-      ],
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      themeMode: ThemeMode.system,
-      theme: ThemeData.light(useMaterial3: true),
-      darkTheme: ThemeData.dark(useMaterial3: true),
-      home: const BootScreen(),
+    return StreamBuilder<AppSettingsModel>(
+      stream: SettingsRepository().watch(),
+      builder: (context, snap) {
+        if (snap.hasData) {
+          final code = snap.data!.appLanguageCode;
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            appLocale.applyLanguageCode(code);
+          });
+        }
+
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          locale: appLocale.locale,
+          supportedLocales: const [
+            Locale('ar'),
+            Locale('en'),
+          ],
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          themeMode: ThemeMode.system,
+          theme: ThemeData.light(useMaterial3: true),
+          darkTheme: ThemeData.dark(useMaterial3: true),
+          home: const BootScreen(),
+        );
+      },
     );
   }
 }

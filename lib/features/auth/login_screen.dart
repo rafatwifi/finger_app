@@ -5,6 +5,9 @@
   - صورة مرفوعة إن وُجدت
   - وإلا أيقونة البصمة الافتراضية
 - بدون تغيير أي Widget آخر
+
+التعديل الوحيد:
+- إزالة ! من AppLocalizations.of(context) لحل التحذير الأصفر.
 */
 
 import 'package:flutter/material.dart';
@@ -50,12 +53,12 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
     } on AuthException {
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _error = l10n.invalidCredentials;
       });
     } catch (_) {
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _error = l10n.invalidCredentials;
       });
@@ -70,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 

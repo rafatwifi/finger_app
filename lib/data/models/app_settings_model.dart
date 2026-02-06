@@ -1,23 +1,29 @@
 // lib/data/models/app_settings_model.dart
 // موديل إعدادات النظام (مركزي) يُحفظ في Firestore
-// تم إضافة دعم رابط لوغو شاشة تسجيل الدخول (loginLogoUrl)
-// بدون كسر أي إعدادات أو مفاتيح حالية
+// يدعم لغة التطبيق المختارة + الافتراضي لغة الجهاز
+//
+// ملاحظة مهمة:
+// - تم تعديل copyWith لدعم تعيين appLanguageCode إلى null (System) بشكل صحيح.
+// - بدون هذا التعديل: اختيار "النظام" لن يُحفظ نهائيًا.
 
 class AppSettingsModel {
-  final String timeFormat; // "12" أو "24"
-  final int maxScansPerDay; // عدد البصمات المسموحة باليوم
-  final bool requireSupervisor; // يحتاج موافقة مشرف/مسؤول
-  final bool requireLocation; // يحتاج تحقق موقع
-  final bool requireBiometric; // يحتاج بصمة جهاز (مؤقت)
+  final String timeFormat;
+  final int maxScansPerDay;
+  final bool requireSupervisor;
+  final bool requireLocation;
+  final bool requireBiometric;
 
   // UI Theme
-  final String primaryColorHex; // مثل: "#FF6A00"
-  final String accentColorHex; // مثل: "#00FFAA"
-  final double logoSize; // حجم اللوغو في الواجهة
-  final String slogan; // نص تحت/فوق اللوغو
+  final String primaryColorHex;
+  final String accentColorHex;
+  final double logoSize;
+  final String slogan;
 
-  // 🔽 جديد: رابط لوغو شاشة تسجيل الدخول (من Firebase Storage)
+  // Login logo
   final String? loginLogoUrl;
+
+  // 🔽 لغة التطبيق المختارة (null = لغة الجهاز)
+  final String? appLanguageCode; // "ar" | "en" | null
 
   const AppSettingsModel({
     required this.timeFormat,
@@ -30,6 +36,7 @@ class AppSettingsModel {
     required this.logoSize,
     required this.slogan,
     this.loginLogoUrl,
+    this.appLanguageCode,
   });
 
   factory AppSettingsModel.defaults() {
@@ -44,6 +51,7 @@ class AppSettingsModel {
       logoSize: 120,
       slogan: 'ATTEND OR BE SEEN',
       loginLogoUrl: null,
+      appLanguageCode: null, // لغة الجهاز
     );
   }
 
@@ -62,6 +70,7 @@ class AppSettingsModel {
       logoSize: _asDouble(ui['logoSize'], 120),
       slogan: (ui['slogan'] ?? 'ATTEND OR BE SEEN').toString(),
       loginLogoUrl: ui['loginLogoUrl']?.toString(),
+      appLanguageCode: d['appLanguageCode']?.toString(),
     );
   }
 
@@ -72,6 +81,7 @@ class AppSettingsModel {
       'requireSupervisor': requireSupervisor,
       'requireLocation': requireLocation,
       'requireBiometric': requireBiometric,
+      'appLanguageCode': appLanguageCode,
       'uiTheme': {
         'primaryColor': primaryColorHex,
         'accentColor': accentColorHex,
@@ -82,6 +92,9 @@ class AppSettingsModel {
     };
   }
 
+  /// copyWith:
+  /// - الحقول العادية: null يعني "لا تغيّر"
+  /// - appLanguageCode: نحتاج دعم null كقيمة فعلية (System)
   AppSettingsModel copyWith({
     String? timeFormat,
     int? maxScansPerDay,
@@ -93,6 +106,11 @@ class AppSettingsModel {
     double? logoSize,
     String? slogan,
     String? loginLogoUrl,
+
+    /// مهم:
+    /// - إذا لم ترسل هذا المتغير إطلاقًا => لا تغيّر
+    /// - إذا أرسلته null => يعني System
+    Object? appLanguageCode = _noChange,
   }) {
     return AppSettingsModel(
       timeFormat: timeFormat ?? this.timeFormat,
@@ -105,8 +123,16 @@ class AppSettingsModel {
       logoSize: logoSize ?? this.logoSize,
       slogan: slogan ?? this.slogan,
       loginLogoUrl: loginLogoUrl ?? this.loginLogoUrl,
+      appLanguageCode: appLanguageCode == _noChange
+          ? this.appLanguageCode
+          : appLanguageCode as String?,
     );
   }
+
+  // Sentinel value حتى نفرّق بين:
+  // - "لم يتم تمرير قيمة"
+  // - "تم تمرير null فعليًا"
+  static const Object _noChange = Object();
 
   static int _asInt(dynamic v, int fallback) {
     if (v is int) return v;
