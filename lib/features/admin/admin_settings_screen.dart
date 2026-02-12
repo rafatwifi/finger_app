@@ -1,21 +1,21 @@
 // lib/features/admin/admin_settings_screen.dart
 // شاشة إعدادات الأدمن (تحكم مركزي)
 //
-// بعد التقسيم (بدون أي تعديل سلوك):
+// بعد التقسيم:
 // - تم فصل كارت اللغة في ملف مستقل
+// - تم فصل كارت لوغو تسجيل الدخول في ملف مستقل
 // - كل الميزات السابقة محفوظة 100%
-// - لا يوجد تغيير على SAVE / APPLY
-// - لا يوجد تغيير على تطبيق اللغة (حالياً ما زال Draft فقط)
+// - SAVE و APPLY بدون تغيير
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/app_settings_model.dart';
 import '../../data/repositories/settings_repository.dart';
-import '../../core/ui/login_logo_controller.dart';
 import '../../l10n/app_localizations.dart';
 import 'controller/settings_draft_controller.dart';
 import 'widgets/admin_settings_language_card.dart';
+import 'widgets/admin_settings_logo_card.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -94,50 +94,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
                 const SizedBox(height: 12),
 
-                // ===== Login Screen Logo =====
-                _card(
-                  title: t.loginScreenLogo,
-                  child: ExpansionTile(
-                    collapsedIconColor: Colors.white70,
-                    iconColor: accent,
-                    title: Text(
-                      t.manage,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    children: [
-                      ListTile(
-                        leading: const Icon(
-                          Icons.image_outlined,
-                          color: Colors.white70,
-                        ),
-                        title: Text(
-                          t.changeLoginLogo,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        onTap: () async {
-                          await context
-                              .read<LoginLogoController>()
-                              .pickAndCropLogo(context);
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.white70,
-                        ),
-                        title: Text(
-                          t.removeLoginLogo,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        onTap: () async {
-                          await context.read<LoginLogoController>().clearLogo();
-
-                          // ✅ إشعار بعد الحذف
-                          _notify(context, t.removeLoginLogo, accent);
-                        },
-                      ),
-                    ],
-                  ),
+                // ===== Login Screen Logo (ملف منفصل) =====
+                AdminSettingsLogoCard(
+                  accent: accent,
+                  onLogoRemoved: () {
+                    _notify(context, t.removeLoginLogo, accent);
+                  },
                 ),
 
                 const SizedBox(height: 12),
