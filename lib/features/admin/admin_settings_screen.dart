@@ -5,6 +5,7 @@
 // - تم فصل كارت اللغة في ملف مستقل
 // - تم فصل كارت لوغو تسجيل الدخول في ملف مستقل
 // - تم فصل كارت الوقت + الحد اليومي في ملف مستقل
+// - تم فصل كارت قواعد التحقق في ملف مستقل
 // - كل الميزات السابقة محفوظة 100%
 // - SAVE و APPLY بدون تغيير
 
@@ -18,6 +19,7 @@ import 'controller/settings_draft_controller.dart';
 import 'widgets/admin_settings_attendance_card.dart';
 import 'widgets/admin_settings_language_card.dart';
 import 'widgets/admin_settings_logo_card.dart';
+import 'widgets/admin_settings_validation_card.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -116,39 +118,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
                 const SizedBox(height: 12),
 
-                _card(
-                  title: t.validationRules,
-                  child: Column(
-                    children: [
-                      _switchRow(
-                        label: t.requireSupervisor,
-                        value: settings.requireSupervisor,
-                        color: primary,
-                        onChanged: (v) => _onUpdate(
-                          ctrl,
-                          settings.copyWith(requireSupervisor: v),
-                        ),
-                      ),
-                      _switchRow(
-                        label: t.requireLocation,
-                        value: settings.requireLocation,
-                        color: primary,
-                        onChanged: (v) => _onUpdate(
-                          ctrl,
-                          settings.copyWith(requireLocation: v),
-                        ),
-                      ),
-                      _switchRow(
-                        label: t.requireBiometric,
-                        value: settings.requireBiometric,
-                        color: primary,
-                        onChanged: (v) => _onUpdate(
-                          ctrl,
-                          settings.copyWith(requireBiometric: v),
-                        ),
-                      ),
-                    ],
-                  ),
+                // ===== Validation Rules Card (ملف منفصل) =====
+                AdminSettingsValidationCard(
+                  settings: settings,
+                  primary: primary,
+                  onDraftChanged: (updated) => _onUpdate(ctrl, updated),
                 ),
 
                 const SizedBox(height: 12),
@@ -327,25 +301,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           child,
         ],
       ),
-    );
-  }
-
-  Widget _switchRow({
-    required String label,
-    required bool value,
-    required Color color,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.white70),
-          ),
-        ),
-        Switch(value: value, activeColor: color, onChanged: onChanged),
-      ],
     );
   }
 
