@@ -16,9 +16,8 @@
 // - تعريب كامل للنصوص عبر AppLocalizations
 // - بدون حذف أي Widget أو ميزة
 //
-// تعديل هذه الخطوة:
-// - Dropdown للغة
-// - إصلاح اختيار System عبر قيمة 'system' بدل null داخل الـ Dropdown فقط
+// تعديل هذه الخطوة (فقط):
+// - إضافة SnackBar عند حذف لوغو الدخول
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -123,6 +122,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
                 const SizedBox(height: 12),
 
+                // ===== Login Screen Logo =====
                 _card(
                   title: t.loginScreenLogo,
                   child: ExpansionTile(
@@ -159,6 +159,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         ),
                         onTap: () async {
                           await context.read<LoginLogoController>().clearLogo();
+
+                          // ✅ إشعار بعد الحذف
+                          _notify(context, t.removeLoginLogo, accent);
                         },
                       ),
                     ],

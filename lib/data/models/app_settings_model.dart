@@ -1,10 +1,17 @@
 // lib/data/models/app_settings_model.dart
 // موديل إعدادات النظام (مركزي) يُحفظ في Firestore
-// يدعم لغة التطبيق المختارة + الافتراضي لغة الجهاز
 //
-// ملاحظة مهمة:
-// - تم تعديل copyWith لدعم تعيين appLanguageCode إلى null (System) بشكل صحيح.
-// - بدون هذا التعديل: اختيار "النظام" لن يُحفظ نهائيًا.
+// الوظيفة:
+// - تخزين إعدادات الأدمن
+// - دعم لغة التطبيق
+// - دعم لوغو عالمي مجاني داخل Firestore بدون Firebase Storage
+//
+// التعديل الجديد في هذا الملف:
+// - إضافة appLoginLogoBase64 داخل uiTheme
+//   هذا يعني:
+//   - الأدمن يرفع صورة
+//   - تنحفظ كنص Base64 داخل Firestore
+//   - كل الأجهزة تقرأها وتعرضها بدون Storage وبدون فلوس
 
 class AppSettingsModel {
   final String timeFormat;
@@ -22,6 +29,10 @@ class AppSettingsModel {
   // Login logo
   final String? loginLogoUrl;
 
+  // 🔽 جديد: لوغو عالمي مجاني داخل Firestore (Base64)
+  // null => ماكو لوغو عالمي
+  final String? appLoginLogoBase64;
+
   // 🔽 لغة التطبيق المختارة (null = لغة الجهاز)
   final String? appLanguageCode; // "ar" | "en" | null
 
@@ -36,6 +47,7 @@ class AppSettingsModel {
     required this.logoSize,
     required this.slogan,
     this.loginLogoUrl,
+    this.appLoginLogoBase64,
     this.appLanguageCode,
   });
 
@@ -51,6 +63,7 @@ class AppSettingsModel {
       logoSize: 120,
       slogan: 'ATTEND OR BE SEEN',
       loginLogoUrl: null,
+      appLoginLogoBase64: null,
       appLanguageCode: null, // لغة الجهاز
     );
   }
@@ -69,7 +82,13 @@ class AppSettingsModel {
       accentColorHex: (ui['accentColor'] ?? '#00FFAA').toString(),
       logoSize: _asDouble(ui['logoSize'], 120),
       slogan: (ui['slogan'] ?? 'ATTEND OR BE SEEN').toString(),
+
+      // قديم (اختياري)
       loginLogoUrl: ui['loginLogoUrl']?.toString(),
+
+      // 🔽 جديد
+      appLoginLogoBase64: ui['appLoginLogoBase64']?.toString(),
+
       appLanguageCode: d['appLanguageCode']?.toString(),
     );
   }
@@ -87,7 +106,12 @@ class AppSettingsModel {
         'accentColor': accentColorHex,
         'logoSize': logoSize,
         'slogan': slogan,
+
+        // قديم
         'loginLogoUrl': loginLogoUrl,
+
+        // 🔽 جديد
+        'appLoginLogoBase64': appLoginLogoBase64,
       },
     };
   }
@@ -95,6 +119,7 @@ class AppSettingsModel {
   /// copyWith:
   /// - الحقول العادية: null يعني "لا تغيّر"
   /// - appLanguageCode: نحتاج دعم null كقيمة فعلية (System)
+  /// - appLoginLogoBase64: نحتاج دعم null كقيمة فعلية (حذف اللوغو)
   AppSettingsModel copyWith({
     String? timeFormat,
     int? maxScansPerDay,
@@ -106,6 +131,11 @@ class AppSettingsModel {
     double? logoSize,
     String? slogan,
     String? loginLogoUrl,
+
+    /// 🔽 مهم:
+    /// - إذا لم ترسل هذا المتغير إطلاقًا => لا تغيّر
+    /// - إذا أرسلته null => حذف اللوغو العالمي
+    Object? appLoginLogoBase64 = _noChange,
 
     /// مهم:
     /// - إذا لم ترسل هذا المتغير إطلاقًا => لا تغيّر
@@ -123,6 +153,9 @@ class AppSettingsModel {
       logoSize: logoSize ?? this.logoSize,
       slogan: slogan ?? this.slogan,
       loginLogoUrl: loginLogoUrl ?? this.loginLogoUrl,
+      appLoginLogoBase64: appLoginLogoBase64 == _noChange
+          ? this.appLoginLogoBase64
+          : appLoginLogoBase64 as String?,
       appLanguageCode: appLanguageCode == _noChange
           ? this.appLanguageCode
           : appLanguageCode as String?,
