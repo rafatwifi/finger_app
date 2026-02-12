@@ -1,23 +1,11 @@
 // lib/features/admin/admin_settings_screen.dart
 // شاشة إعدادات الأدمن (تحكم مركزي)
-// Draft UI:
-// - لا أزرار بالبداية
-// - عند أي تعديل يظهر زر SAVE فقط
-// - بعد SAVE يظهر زر APPLY فقط
-// - بعد APPLY إشعار ويختفي الزر
-// - إزالة حقل التايتل السفلي نهائيًا
-// - تعديل النص أسفل CONTROL CORE عبر أيقونة قلم
-// - Login Screen Logo كقائمة منسدلة
-// - اختيار اللغة (System / AR / EN) ضمن Draft
 //
-// ملاحظة: هذا الملف يحافظ على كل الميزات الموجودة ويصلح شريط الأزرار السفلي (ستايل + تموضع).
-//
-// تم التعديل:
-// - تعريب كامل للنصوص عبر AppLocalizations
-// - بدون حذف أي Widget أو ميزة
-//
-// تعديل هذه الخطوة (فقط):
-// - إضافة SnackBar عند حذف لوغو الدخول
+// بعد التقسيم (بدون أي تعديل سلوك):
+// - تم فصل كارت اللغة في ملف مستقل
+// - كل الميزات السابقة محفوظة 100%
+// - لا يوجد تغيير على SAVE / APPLY
+// - لا يوجد تغيير على تطبيق اللغة (حالياً ما زال Draft فقط)
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +15,7 @@ import '../../data/repositories/settings_repository.dart';
 import '../../core/ui/login_logo_controller.dart';
 import '../../l10n/app_localizations.dart';
 import 'controller/settings_draft_controller.dart';
+import 'widgets/admin_settings_language_card.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -47,10 +36,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     '#FF2D55',
     '#FFD60A',
   ];
-
-  static const String _langSystem = 'system';
-  static const String _langAr = 'ar';
-  static const String _langEn = 'en';
 
   @override
   void initState() {
@@ -100,24 +85,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 _headerCard(context, ctrl, primary, accent, settings),
                 const SizedBox(height: 12),
 
-                // ===== Language (Dropdown) =====
-                _card(
-                  title: t.language,
-                  child: _languageDropdown(
-                    context: context,
-                    settings: settings,
-                    accent: accent,
-                    onChanged: (code) {
-                      // تحويل قيمة UI إلى قيمة Firestore
-                      final String? firestoreValue =
-                          (code == _langSystem) ? null : code;
-
-                      _onUpdate(
-                        ctrl,
-                        settings.copyWith(appLanguageCode: firestoreValue),
-                      );
-                    },
-                  ),
+                // ===== Language Card (ملف منفصل) =====
+                AdminSettingsLanguageCard(
+                  settings: settings,
+                  accent: accent,
+                  onDraftChanged: (updated) => _onUpdate(ctrl, updated),
                 ),
 
                 const SizedBox(height: 12),
@@ -327,178 +299,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  Widget _languageDropdown({
-    required BuildContext context,
-    required AppSettingsModel settings,
-    required Color accent,
-    required ValueChanged<String> onChanged,
-  }) {
-    final t = AppLocalizations.of(context);
-
-    // null = system في Firestore
-    final String current = settings.appLanguageCode ?? _langSystem;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: accent.withOpacity(0.35),
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: current,
-          dropdownColor: const Color(0xFF0E0E0E),
-          iconEnabledColor: accent,
-          isExpanded: true,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
-          items: [
-            DropdownMenuItem<String>(
-              value: _langSystem,
-              child: Text(t.system),
-            ),
-            const DropdownMenuItem<String>(
-              value: _langAr,
-              child: Text('AR'),
-            ),
-            const DropdownMenuItem<String>(
-              value: _langEn,
-              child: Text('EN'),
-            ),
-          ],
-          onChanged: (v) {
-            if (v == null) return;
-            onChanged(v);
-          },
-        ),
-      ),
-    );
-  }
-
-  // ===== Header with editable slogan =====
-  Widget _headerCard(
-    BuildContext context,
-    SettingsDraftController ctrl,
-    Color primary,
-    Color accent,
-    AppSettingsModel s,
-  ) {
-    final t = AppLocalizations.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          colors: [primary.withOpacity(0.25), Colors.black],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: accent.withOpacity(0.35)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: s.logoSize * 0.45,
-            height: s.logoSize * 0.45,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: accent.withOpacity(0.18),
-              border: Border.all(color: accent.withOpacity(0.6)),
-              boxShadow: [
-                BoxShadow(color: accent.withOpacity(0.25), blurRadius: 18),
-              ],
-            ),
-            child: Icon(Icons.shield, color: accent, size: s.logoSize * 0.22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.controlCore,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        s.slogan,
-                        style: TextStyle(
-                          color: accent.withOpacity(0.85),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.edit, color: accent, size: 18),
-                      onPressed: () => _editSlogan(context, ctrl, s),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _editSlogan(
-    BuildContext context,
-    SettingsDraftController ctrl,
-    AppSettingsModel s,
-  ) async {
-    final t = AppLocalizations.of(context);
-    final controller = TextEditingController(text: s.slogan);
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF121212),
-        title: Text(
-          t.editTitle,
-          style: const TextStyle(color: Colors.white),
-        ),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: t.title,
-            hintStyle: const TextStyle(color: Colors.white38),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(t.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text(t.ok),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && result.isNotEmpty) {
-      _onUpdate(ctrl, s.copyWith(slogan: result));
-    }
-  }
-
   // ===== Action Bar (Styled) =====
   Widget _actionBar(
     BuildContext context,
@@ -703,5 +503,124 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     final cleaned = hex.replaceAll('#', '').trim();
     final value = int.parse('FF$cleaned', radix: 16);
     return Color(value);
+  }
+
+  // ===== Header with editable slogan =====
+  Widget _headerCard(
+    BuildContext context,
+    SettingsDraftController ctrl,
+    Color primary,
+    Color accent,
+    AppSettingsModel s,
+  ) {
+    final t = AppLocalizations.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          colors: [primary.withOpacity(0.25), Colors.black],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: accent.withOpacity(0.35)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: s.logoSize * 0.45,
+            height: s.logoSize * 0.45,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accent.withOpacity(0.18),
+              border: Border.all(color: accent.withOpacity(0.6)),
+              boxShadow: [
+                BoxShadow(color: accent.withOpacity(0.25), blurRadius: 18),
+              ],
+            ),
+            child: Icon(Icons.shield, color: accent, size: s.logoSize * 0.22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t.controlCore,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        s.slogan,
+                        style: TextStyle(
+                          color: accent.withOpacity(0.85),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: accent, size: 18),
+                      onPressed: () => _editSlogan(context, ctrl, s),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _editSlogan(
+    BuildContext context,
+    SettingsDraftController ctrl,
+    AppSettingsModel s,
+  ) async {
+    final t = AppLocalizations.of(context);
+    final controller = TextEditingController(text: s.slogan);
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF121212),
+        title: Text(
+          t.editTitle,
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: t.title,
+            hintStyle: const TextStyle(color: Colors.white38),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(t.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: Text(t.ok),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      _onUpdate(ctrl, s.copyWith(slogan: result));
+    }
   }
 }
