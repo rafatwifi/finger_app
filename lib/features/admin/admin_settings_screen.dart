@@ -4,6 +4,7 @@
 // بعد التقسيم:
 // - تم فصل كارت اللغة في ملف مستقل
 // - تم فصل كارت لوغو تسجيل الدخول في ملف مستقل
+// - تم فصل كارت الوقت + الحد اليومي في ملف مستقل
 // - كل الميزات السابقة محفوظة 100%
 // - SAVE و APPLY بدون تغيير
 
@@ -14,6 +15,7 @@ import '../../data/models/app_settings_model.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'controller/settings_draft_controller.dart';
+import 'widgets/admin_settings_attendance_card.dart';
 import 'widgets/admin_settings_language_card.dart';
 import 'widgets/admin_settings_logo_card.dart';
 
@@ -104,62 +106,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
                 const SizedBox(height: 12),
 
-                _card(
-                  title: t.timeFormat,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _chipChoice(
-                          label: '24H',
-                          selected: settings.timeFormat == '24',
-                          color: accent,
-                          onTap: () => _onUpdate(
-                            ctrl,
-                            settings.copyWith(timeFormat: '24'),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _chipChoice(
-                          label: '12H',
-                          selected: settings.timeFormat == '12',
-                          color: accent,
-                          onTap: () => _onUpdate(
-                            ctrl,
-                            settings.copyWith(timeFormat: '12'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                _card(
-                  title: t.dailyScansLimit,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${t.maxScansPerDay}: ${settings.maxScansPerDay}',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      Slider(
-                        value: settings.maxScansPerDay.toDouble(),
-                        min: 1,
-                        max: 20,
-                        divisions: 19,
-                        activeColor: primary,
-                        inactiveColor: Colors.white12,
-                        onChanged: (v) => _onUpdate(
-                          ctrl,
-                          settings.copyWith(maxScansPerDay: v.round()),
-                        ),
-                      ),
-                    ],
-                  ),
+                // ===== Attendance Card (Time + Daily Limit) =====
+                AdminSettingsAttendanceCard(
+                  settings: settings,
+                  primary: primary,
+                  accent: accent,
+                  onDraftChanged: (updated) => _onUpdate(ctrl, updated),
                 ),
 
                 const SizedBox(height: 12),
@@ -374,36 +326,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           const SizedBox(height: 12),
           child,
         ],
-      ),
-    );
-  }
-
-  Widget _chipChoice({
-    required String label,
-    required bool selected,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.18) : Colors.black,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selected ? color.withOpacity(0.8) : Colors.white10,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? color : Colors.white70,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
       ),
     );
   }
