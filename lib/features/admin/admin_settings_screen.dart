@@ -6,6 +6,7 @@
 // - تم فصل كارت لوغو تسجيل الدخول في ملف مستقل
 // - تم فصل كارت الوقت + الحد اليومي في ملف مستقل
 // - تم فصل كارت قواعد التحقق في ملف مستقل
+// - تم فصل كارت الثيم في ملف مستقل
 // - كل الميزات السابقة محفوظة 100%
 // - SAVE و APPLY بدون تغيير
 
@@ -19,6 +20,7 @@ import 'controller/settings_draft_controller.dart';
 import 'widgets/admin_settings_attendance_card.dart';
 import 'widgets/admin_settings_language_card.dart';
 import 'widgets/admin_settings_logo_card.dart';
+import 'widgets/admin_settings_theme_card.dart';
 import 'widgets/admin_settings_validation_card.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
@@ -127,57 +129,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
                 const SizedBox(height: 12),
 
-                _card(
-                  title: t.theme,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.primaryColor,
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      const SizedBox(height: 10),
-                      _colorRow(
-                        selectedHex: settings.primaryColorHex,
-                        accent: accent,
-                        onPick: (hex) => _onUpdate(
-                          ctrl,
-                          settings.copyWith(primaryColorHex: hex),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        t.accentColor,
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      const SizedBox(height: 10),
-                      _colorRow(
-                        selectedHex: settings.accentColorHex,
-                        accent: accent,
-                        onPick: (hex) => _onUpdate(
-                          ctrl,
-                          settings.copyWith(accentColorHex: hex),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '${t.logoSize}: ${settings.logoSize.toStringAsFixed(0)}',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      Slider(
-                        value: settings.logoSize,
-                        min: 80,
-                        max: 220,
-                        divisions: 14,
-                        activeColor: primary,
-                        inactiveColor: Colors.white12,
-                        onChanged: (v) => _onUpdate(
-                          ctrl,
-                          settings.copyWith(logoSize: v),
-                        ),
-                      ),
-                    ],
-                  ),
+                // ===== Theme Card (ملف منفصل) =====
+                AdminSettingsThemeCard(
+                  settings: settings,
+                  primary: primary,
+                  accent: accent,
+                  palette: _palette,
+                  onDraftChanged: (updated) => _onUpdate(ctrl, updated),
                 ),
               ],
             ),
@@ -275,66 +233,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 2),
       ),
-    );
-  }
-
-  // ===== Helpers =====
-  Widget _card({required String title, required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF121212),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _colorRow({
-    required String selectedHex,
-    required Color accent,
-    required ValueChanged<String> onPick,
-  }) {
-    return Wrap(
-      spacing: 10,
-      children: _palette.map((hex) {
-        final c = _hexToColor(hex);
-        final selected = hex.toUpperCase() == selectedHex.toUpperCase();
-        return InkWell(
-          onTap: () => onPick(hex),
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: c,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: selected ? accent : Colors.black,
-                width: selected ? 2 : 1,
-              ),
-              boxShadow: [
-                BoxShadow(color: c.withOpacity(0.25), blurRadius: 12),
-              ],
-            ),
-            child:
-                selected ? const Icon(Icons.check, color: Colors.black) : null,
-          ),
-        );
-      }).toList(),
     );
   }
 
