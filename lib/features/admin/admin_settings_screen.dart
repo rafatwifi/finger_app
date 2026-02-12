@@ -7,6 +7,7 @@
 // - تم فصل كارت الوقت + الحد اليومي في ملف مستقل
 // - تم فصل كارت قواعد التحقق في ملف مستقل
 // - تم فصل كارت الثيم في ملف مستقل
+// - تم فصل الهيدر في ملف مستقل
 // - كل الميزات السابقة محفوظة 100%
 // - SAVE و APPLY بدون تغيير
 
@@ -18,6 +19,7 @@ import '../../data/repositories/settings_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'controller/settings_draft_controller.dart';
 import 'widgets/admin_settings_attendance_card.dart';
+import 'widgets/admin_settings_header_card.dart';
 import 'widgets/admin_settings_language_card.dart';
 import 'widgets/admin_settings_logo_card.dart';
 import 'widgets/admin_settings_theme_card.dart';
@@ -88,10 +90,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             body: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _headerCard(context, ctrl, primary, accent, settings),
+                // ===== Header Card (ملف منفصل) =====
+                AdminSettingsHeaderCard(
+                  settings: settings,
+                  primary: primary,
+                  accent: accent,
+                  onDraftChanged: (updated) => _onUpdate(ctrl, updated),
+                ),
+
                 const SizedBox(height: 12),
 
-                // ===== Language Card (ملف منفصل) =====
                 AdminSettingsLanguageCard(
                   settings: settings,
                   accent: accent,
@@ -100,7 +108,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
                 const SizedBox(height: 12),
 
-                // ===== Login Screen Logo (ملف منفصل) =====
                 AdminSettingsLogoCard(
                   accent: accent,
                   onLogoRemoved: () {
@@ -110,7 +117,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
                 const SizedBox(height: 12),
 
-                // ===== Attendance Card (Time + Daily Limit) =====
                 AdminSettingsAttendanceCard(
                   settings: settings,
                   primary: primary,
@@ -120,7 +126,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
                 const SizedBox(height: 12),
 
-                // ===== Validation Rules Card (ملف منفصل) =====
                 AdminSettingsValidationCard(
                   settings: settings,
                   primary: primary,
@@ -129,7 +134,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
                 const SizedBox(height: 12),
 
-                // ===== Theme Card (ملف منفصل) =====
                 AdminSettingsThemeCard(
                   settings: settings,
                   primary: primary,
@@ -145,7 +149,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  // ===== Action Bar (Styled) =====
   Widget _actionBar(
     BuildContext context,
     SettingsDraftController ctrl,
@@ -154,7 +157,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   ) {
     final t = AppLocalizations.of(context);
 
-    // لا يظهر شيء إذا لا توجد تغييرات ولم يتم حفظ محلي
     if (!ctrl.hasChanges && !_savedLocal) return const SizedBox.shrink();
 
     return SafeArea(
@@ -240,124 +242,5 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     final cleaned = hex.replaceAll('#', '').trim();
     final value = int.parse('FF$cleaned', radix: 16);
     return Color(value);
-  }
-
-  // ===== Header with editable slogan =====
-  Widget _headerCard(
-    BuildContext context,
-    SettingsDraftController ctrl,
-    Color primary,
-    Color accent,
-    AppSettingsModel s,
-  ) {
-    final t = AppLocalizations.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          colors: [primary.withOpacity(0.25), Colors.black],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: accent.withOpacity(0.35)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: s.logoSize * 0.45,
-            height: s.logoSize * 0.45,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: accent.withOpacity(0.18),
-              border: Border.all(color: accent.withOpacity(0.6)),
-              boxShadow: [
-                BoxShadow(color: accent.withOpacity(0.25), blurRadius: 18),
-              ],
-            ),
-            child: Icon(Icons.shield, color: accent, size: s.logoSize * 0.22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.controlCore,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        s.slogan,
-                        style: TextStyle(
-                          color: accent.withOpacity(0.85),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.edit, color: accent, size: 18),
-                      onPressed: () => _editSlogan(context, ctrl, s),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _editSlogan(
-    BuildContext context,
-    SettingsDraftController ctrl,
-    AppSettingsModel s,
-  ) async {
-    final t = AppLocalizations.of(context);
-    final controller = TextEditingController(text: s.slogan);
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF121212),
-        title: Text(
-          t.editTitle,
-          style: const TextStyle(color: Colors.white),
-        ),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: t.title,
-            hintStyle: const TextStyle(color: Colors.white38),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(t.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text(t.ok),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && result.isNotEmpty) {
-      _onUpdate(ctrl, s.copyWith(slogan: result));
-    }
   }
 }
